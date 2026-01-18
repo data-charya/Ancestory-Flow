@@ -38,11 +38,7 @@ export function TreeView({
   const presentation = usePresentationMode(sortedGens, containerRef);
   
   // Calculate connection lines
-  const lines = useTreeLines(
-    members, 
-    contentRef, 
-    presentationMode ? presentation.scale : 1
-  );
+  const lines = useTreeLines(members, contentRef);
 
   // Reset presentation when exiting
   useEffect(() => {
@@ -50,11 +46,6 @@ export function TreeView({
       presentation.reset();
     }
   }, [presentationMode, presentation]);
-
-  // Determine transform based on mode
-  const transform = presentationMode 
-    ? `translateY(${presentation.translateY}px) scale(${presentation.scale})`
-    : 'none';
 
   // Fullscreen presentation mode styles
   if (isFullscreen) {
@@ -64,43 +55,43 @@ export function TreeView({
         className="w-full h-full flex flex-col"
       >
         {/* Title */}
-        <div className="text-center py-6">
+        <div className="text-center py-4 flex-shrink-0">
           <h1 className="text-3xl font-serif font-bold text-white/90">Family Tree</h1>
           <p className="text-white/50 text-sm mt-1">Generation {presentation.currentGen}</p>
         </div>
 
-        {/* Tree Content - Centered */}
-        <div className="flex-1 flex items-center justify-center overflow-hidden">
+        {/* Tree Content - Scrollable */}
+        <div className="flex-1 overflow-auto px-8 py-4">
           <div 
             ref={contentRef} 
-            className="transition-transform duration-700 ease-in-out"
-            style={{ transform }}
+            className="relative min-w-full"
           >
             {/* SVG Connection Lines */}
-            <svg className="absolute inset-0 w-full h-full pointer-events-none">
+            <svg className="absolute inset-0 pointer-events-none" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
               {lines.map(line => (
                 <path 
                   key={line.id} 
                   d={line.path} 
-                  stroke={LINE_STYLE.stroke}
-                  strokeWidth={LINE_STYLE.strokeWidth}
-                  strokeDasharray={LINE_STYLE.strokeDasharray}
+                  stroke={line.type === 'spouse' ? '#f472b6' : line.type === 'sibling' ? '#60a5fa' : LINE_STYLE.stroke}
+                  strokeWidth={line.type === 'spouse' ? 3 : line.type === 'sibling' ? 2 : LINE_STYLE.strokeWidth}
+                  strokeDasharray={line.type === 'spouse' ? 'none' : LINE_STYLE.strokeDasharray}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   fill="none"
-                  className="opacity-60"
+                  className="opacity-50"
                 />
               ))}
             </svg>
 
             {/* Generation Rows */}
-            <div className="flex flex-col gap-20 items-center px-12">
+            <div className="flex flex-col gap-16 items-center py-8">
               {sortedGens.map(gen => (
                 <div 
                   key={gen} 
                   id={`gen-row-${gen}`} 
-                  className="flex justify-center gap-10 transition-all duration-700"
+                  className="flex justify-center gap-8 transition-all duration-500"
                   style={{ 
-                    opacity: gen !== presentation.currentGen ? 0.15 : 1,
-                    transform: gen !== presentation.currentGen ? 'scale(0.9)' : 'scale(1)'
+                    opacity: gen !== presentation.currentGen ? 0.2 : 1,
                   }}
                 >
                   {grouped[gen].map(member => (
@@ -113,7 +104,7 @@ export function TreeView({
         </div>
 
         {/* Controls at Bottom */}
-        <div className="pb-8">
+        <div className="pb-6 flex-shrink-0">
           <PresentationControls
             currentGen={presentation.currentGen}
             isPaused={presentation.isPaused}
@@ -137,17 +128,19 @@ export function TreeView({
       {/* Tree Content */}
       <div 
         ref={contentRef} 
-        className="min-w-full p-12 min-h-max pb-24"
+        className="relative min-w-full p-12 min-h-max pb-24"
       >
         {/* SVG Connection Lines */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
+        <svg className="absolute inset-0 pointer-events-none z-0" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
           {lines.map(line => (
             <path 
               key={line.id} 
               d={line.path} 
-              stroke={LINE_STYLE.stroke}
-              strokeWidth={LINE_STYLE.strokeWidth}
-              strokeDasharray={LINE_STYLE.strokeDasharray}
+              stroke={line.type === 'spouse' ? '#f472b6' : line.type === 'sibling' ? '#60a5fa' : LINE_STYLE.stroke}
+              strokeWidth={line.type === 'spouse' ? 3 : line.type === 'sibling' ? 2 : LINE_STYLE.strokeWidth}
+              strokeDasharray={line.type === 'spouse' ? 'none' : LINE_STYLE.strokeDasharray}
+              strokeLinecap="round"
+              strokeLinejoin="round"
               fill="none" 
             />
           ))}
@@ -178,12 +171,12 @@ export function TreeView({
 
 // Special member card for presentation mode
 function PresentationMemberCard({ member }) {
-  const { name, relation } = member;
+  const { id, name, relation } = member;
   // Handle both camelCase and snake_case from API
   const imageUrl = member.imageUrl || member.image_url;
   
   return (
-    <div className="flex flex-col items-center w-40 md:w-56">
+    <div id={`node-${id}`} className="flex flex-col items-center w-40 md:w-56">
       {/* Avatar */}
       <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white/20 shadow-2xl overflow-hidden bg-stone-700 mb-3 flex-shrink-0">
         {imageUrl ? (

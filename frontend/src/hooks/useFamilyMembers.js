@@ -74,6 +74,7 @@ export function useFamilyMembers() {
       for (const member of DEMO_MEMBERS) {
         const created = await membersApi.createMember(member);
         createdMembers.push(created);
+        console.log(`Created: ${created.name} (ID: ${created.id})`);
       }
 
       // Step 2: Set up parent relationships
@@ -84,14 +85,21 @@ export function useFamilyMembers() {
         const parents = parentNames.map(findByName).filter(Boolean);
         
         if (child && parents.length > 0) {
+          const parentIds = parents.map(p => p.id);
+          console.log(`Setting parents for ${childName}: [${parentIds.join(', ')}]`);
+          
           await membersApi.updateMember(child.id, {
-            ...child,
-            parents: parents.map(p => p.id),
+            name: child.name,
+            relation: child.relation,
+            generation: child.generation,
+            imageUrl: child.image_url || child.imageUrl,
+            parents: parentIds,
           });
         }
       }
 
       await refresh();
+      console.log('Demo data loaded successfully');
       return true;
     } catch (err) {
       console.error('Demo data error:', err);

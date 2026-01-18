@@ -6,8 +6,6 @@ import { ANIMATION_CONFIG } from '../config';
 export function usePresentationMode(sortedGens, containerRef) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [scale, setScale] = useState(1);
-  const [translateY, setTranslateY] = useState(0);
 
   // Auto-animate through generations
   useEffect(() => {
@@ -19,19 +17,15 @@ export function usePresentationMode(sortedGens, containerRef) {
     }
   }, [isPaused, sortedGens.length]);
 
-  // Calculate transform for current generation
+  // Scroll to center the active generation
   useEffect(() => {
     const activeGenKey = sortedGens[activeIndex];
     const rowEl = document.getElementById(`gen-row-${activeGenKey}`);
     
-    if (rowEl && containerRef.current) {
-      const targetScale = ANIMATION_CONFIG.presentationScale;
-      const centerOffset = (containerRef.current.clientHeight / 2) - 
-        ((rowEl.offsetTop + rowEl.offsetHeight / 2) * targetScale);
-      setScale(targetScale);
-      setTranslateY(centerOffset);
+    if (rowEl) {
+      rowEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-  }, [activeIndex, sortedGens, containerRef]);
+  }, [activeIndex, sortedGens]);
 
   const goToPrevious = useCallback(() => {
     setIsPaused(true);
@@ -49,16 +43,12 @@ export function usePresentationMode(sortedGens, containerRef) {
 
   const reset = useCallback(() => {
     setActiveIndex(0);
-    setScale(1);
-    setTranslateY(0);
     setIsPaused(false);
   }, []);
 
   return {
     activeIndex,
     isPaused,
-    scale,
-    translateY,
     goToPrevious,
     goToNext,
     togglePause,
@@ -66,4 +56,3 @@ export function usePresentationMode(sortedGens, containerRef) {
     currentGen: sortedGens[activeIndex],
   };
 }
-
