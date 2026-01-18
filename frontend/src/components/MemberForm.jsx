@@ -1,7 +1,8 @@
 // Form modal for creating/editing family members
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Save, Trash2, Upload, Link, User } from 'lucide-react';
+import { X, Save, Trash2, Upload, Link, User, ChevronUp, ChevronDown } from 'lucide-react';
+import { getGenerationName } from '../config';
 
 const INITIAL_FORM_STATE = { 
   name: '', 
@@ -234,14 +235,32 @@ export function MemberForm({
             </div>
             <div>
               <label className="text-xs font-bold text-stone-500 block mb-1 uppercase">
-                Gen Level
+                Generation
               </label>
-              <input 
-                type="number" 
-                className="w-full border p-2 rounded-lg outline-indigo-500" 
-                value={formData.generation} 
-                onChange={e => handleChange('generation', parseInt(e.target.value) || 0)} 
-              />
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleChange('generation', formData.generation + 1)}
+                  className="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg transition-colors"
+                  title="Older generation"
+                >
+                  <ChevronUp size={16} />
+                </button>
+                <div className="flex-1 text-center">
+                  <div className="text-sm font-medium text-stone-700">
+                    {getGenerationName(formData.generation)}
+                  </div>
+                  <div className="text-xs text-stone-400">Level {formData.generation}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleChange('generation', formData.generation - 1)}
+                  className="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg transition-colors"
+                  title="Younger generation"
+                >
+                  <ChevronDown size={16} />
+                </button>
+              </div>
             </div>
           </div>
 

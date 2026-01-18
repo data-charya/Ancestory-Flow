@@ -5,7 +5,36 @@ import { MemberCard } from './MemberCard';
 import { PresentationControls } from './PresentationControls';
 import { useTreeLines } from '../hooks/useTreeLines';
 import { usePresentationMode } from '../hooks/usePresentationMode';
-import { LINE_STYLE } from '../config';
+import { getGenerationName } from '../config';
+
+// Elegant line styling
+const getLineStyle = (type, isPresentation = false) => {
+  const baseOpacity = isPresentation ? 0.6 : 0.7;
+  
+  switch (type) {
+    case 'spouse':
+      return {
+        stroke: '#ec4899', // Pink
+        strokeWidth: 2,
+        strokeDasharray: 'none',
+        opacity: baseOpacity + 0.2,
+      };
+    case 'sibling':
+      return {
+        stroke: '#60a5fa', // Blue
+        strokeWidth: 1.5,
+        strokeDasharray: 'none',
+        opacity: baseOpacity,
+      };
+    default:
+      return {
+        stroke: isPresentation ? '#a78bfa' : '#8b5cf6', // Purple
+        strokeWidth: 1.5,
+        strokeDasharray: 'none',
+        opacity: baseOpacity,
+      };
+  }
+};
 
 export function TreeView({ 
   members, 
@@ -47,7 +76,44 @@ export function TreeView({
     }
   }, [presentationMode, presentation]);
 
-  // Fullscreen presentation mode styles
+  // Render connection lines with styling
+  const renderLines = (isPresentation = false) => (
+    <svg 
+      className="absolute inset-0 pointer-events-none" 
+      style={{ width: '100%', height: '100%', overflow: 'visible' }}
+    >
+      <defs>
+        {/* Gradient for lines */}
+        <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.5" />
+        </linearGradient>
+        <linearGradient id="spouseGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#ec4899" stopOpacity="0.6" />
+          <stop offset="50%" stopColor="#f472b6" stopOpacity="0.9" />
+          <stop offset="100%" stopColor="#ec4899" stopOpacity="0.6" />
+        </linearGradient>
+      </defs>
+      {lines.map(line => {
+        const style = getLineStyle(line.type, isPresentation);
+        return (
+          <path 
+            key={line.id} 
+            d={line.path} 
+            stroke={line.type === 'spouse' ? 'url(#spouseGradient)' : style.stroke}
+            strokeWidth={style.strokeWidth}
+            strokeDasharray={style.strokeDasharray}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+            opacity={style.opacity}
+          />
+        );
+      })}
+    </svg>
+  );
+
+  // Fullscreen presentation mode
   if (isFullscreen) {
     return (
       <div 
@@ -57,31 +123,18 @@ export function TreeView({
         {/* Title */}
         <div className="text-center py-4 flex-shrink-0">
           <h1 className="text-3xl font-serif font-bold text-white/90">Family Tree</h1>
-          <p className="text-white/50 text-sm mt-1">Generation {presentation.currentGen}</p>
+          <p className="text-indigo-300 text-lg mt-1 font-medium">
+            {getGenerationName(presentation.currentGen)}
+          </p>
         </div>
 
-        {/* Tree Content - Scrollable */}
+        {/* Tree Content */}
         <div className="flex-1 overflow-auto px-8 py-4">
           <div 
             ref={contentRef} 
             className="relative min-w-full"
           >
-            {/* SVG Connection Lines */}
-            <svg className="absolute inset-0 pointer-events-none" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
-              {lines.map(line => (
-                <path 
-                  key={line.id} 
-                  d={line.path} 
-                  stroke={line.type === 'spouse' ? '#f472b6' : line.type === 'sibling' ? '#60a5fa' : LINE_STYLE.stroke}
-                  strokeWidth={line.type === 'spouse' ? 3 : line.type === 'sibling' ? 2 : LINE_STYLE.strokeWidth}
-                  strokeDasharray={line.type === 'spouse' ? 'none' : LINE_STYLE.strokeDasharray}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                  className="opacity-50"
-                />
-              ))}
-            </svg>
+            {renderLines(true)}
 
             {/* Generation Rows */}
             <div className="flex flex-col gap-16 items-center py-8">
@@ -89,9 +142,9 @@ export function TreeView({
                 <div 
                   key={gen} 
                   id={`gen-row-${gen}`} 
-                  className="flex justify-center gap-8 transition-all duration-500"
+                  className="flex justify-center gap-8 flex-wrap transition-all duration-500"
                   style={{ 
-                    opacity: gen !== presentation.currentGen ? 0.2 : 1,
+                    opacity: gen !== presentation.currentGen ? 0.25 : 1,
                   }}
                 >
                   {grouped[gen].map(member => (
@@ -103,7 +156,7 @@ export function TreeView({
           </div>
         </div>
 
-        {/* Controls at Bottom */}
+        {/* Controls */}
         <div className="pb-6 flex-shrink-0">
           <PresentationControls
             currentGen={presentation.currentGen}
@@ -123,36 +176,21 @@ export function TreeView({
   return (
     <div 
       ref={containerRef}
-      className="relative w-full h-full bg-stone-50 rounded-xl border border-stone-200 overflow-auto"
+      className="relative w-full h-full bg-gradient-to-b from-stone-50 to-stone-100 rounded-xl border border-stone-200 overflow-auto shadow-inner"
     >
-      {/* Tree Content */}
       <div 
         ref={contentRef} 
         className="relative min-w-full p-12 min-h-max pb-24"
       >
-        {/* SVG Connection Lines */}
-        <svg className="absolute inset-0 pointer-events-none z-0" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
-          {lines.map(line => (
-            <path 
-              key={line.id} 
-              d={line.path} 
-              stroke={line.type === 'spouse' ? '#f472b6' : line.type === 'sibling' ? '#60a5fa' : LINE_STYLE.stroke}
-              strokeWidth={line.type === 'spouse' ? 3 : line.type === 'sibling' ? 2 : LINE_STYLE.strokeWidth}
-              strokeDasharray={line.type === 'spouse' ? 'none' : LINE_STYLE.strokeDasharray}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none" 
-            />
-          ))}
-        </svg>
+        {renderLines(false)}
 
         {/* Generation Rows */}
-        <div className="flex flex-col gap-24 items-center">
+        <div className="flex flex-col gap-20 items-center">
           {sortedGens.map(gen => (
             <div 
               key={gen} 
               id={`gen-row-${gen}`} 
-              className="flex justify-center gap-8"
+              className="flex justify-center gap-6 flex-wrap"
             >
               {grouped[gen].map(member => (
                 <MemberCard
@@ -169,16 +207,15 @@ export function TreeView({
   );
 }
 
-// Special member card for presentation mode
+// Presentation mode member card
 function PresentationMemberCard({ member }) {
   const { id, name, relation } = member;
-  // Handle both camelCase and snake_case from API
   const imageUrl = member.imageUrl || member.image_url;
   
   return (
-    <div id={`node-${id}`} className="flex flex-col items-center w-40 md:w-56">
+    <div id={`node-${id}`} className="flex flex-col items-center w-36 md:w-44">
       {/* Avatar */}
-      <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white/20 shadow-2xl overflow-hidden bg-stone-700 mb-3 flex-shrink-0">
+      <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-3 border-white/30 shadow-xl overflow-hidden bg-stone-700 mb-2 flex-shrink-0 ring-2 ring-purple-400/20 ring-offset-2 ring-offset-transparent">
         {imageUrl ? (
           <img 
             src={imageUrl} 
@@ -186,21 +223,21 @@ function PresentationMemberCard({ member }) {
             alt={name}
             onError={(e) => {
               e.target.style.display = 'none';
-              e.target.nextSibling.style.display = 'flex';
+              if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
             }}
           />
         ) : null}
         <div 
-          className={`h-full w-full items-center justify-center text-white/60 font-bold text-3xl bg-gradient-to-br from-stone-600 to-stone-700 ${imageUrl ? 'hidden' : 'flex'}`}
+          className={`h-full w-full items-center justify-center text-white/70 font-bold text-2xl bg-gradient-to-br from-stone-600 to-stone-700 ${imageUrl ? 'hidden' : 'flex'}`}
         >
           {name?.[0] || '?'}
         </div>
       </div>
       
       {/* Info */}
-      <div className="text-center">
-        <div className="font-bold text-lg text-white">{name}</div>
-        <div className="text-sm text-indigo-300 uppercase tracking-wide">{relation}</div>
+      <div className="text-center px-2">
+        <div className="font-semibold text-base text-white truncate max-w-full">{name}</div>
+        <div className="text-xs text-indigo-300/80 uppercase tracking-wider">{relation}</div>
       </div>
     </div>
   );

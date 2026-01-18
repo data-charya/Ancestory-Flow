@@ -18,3 +18,31 @@ export const LINE_STYLE = {
   strokeDasharray: '6 4',  // Dotted line pattern
 };
 
+// Friendly names for generation levels
+export const GENERATION_NAMES = {
+  5: 'Great Great Great Grandparents',
+  4: 'Great Great Grandparents',
+  3: 'Great Grandparents',
+  2: 'Grandparents',
+  1: 'Parents',
+  0: 'You & Siblings',
+  '-1': 'Children',
+  '-2': 'Grandchildren',
+  '-3': 'Great Grandchildren',
+};
+
+// Get friendly name for a generation number
+export function getGenerationName(gen) {
+  const key = String(gen);
+  if (GENERATION_NAMES[key]) {
+    return GENERATION_NAMES[key];
+  }
+  if (gen > 5) {
+    return `${gen - 2}× Great Grandparents`;
+  }
+  if (gen < -3) {
+    return `${Math.abs(gen) - 2}× Great Grandchildren`;
+  }
+  return `Generation ${gen}`;
+}
+

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Play, X } from 'lucide-react';
+import { getGenerationName } from '../config';
 
 export function PresentationControls({
   currentGen,
@@ -12,6 +13,8 @@ export function PresentationControls({
   onExit,
   isFullscreen = false,
 }) {
+  const genName = getGenerationName(currentGen);
+
   if (isFullscreen) {
     return (
       <div className="flex justify-center">
@@ -41,12 +44,6 @@ export function PresentationControls({
               <span className="w-6 h-6 flex items-center justify-center font-bold">❚❚</span>
             )}
           </button>
-          
-          {/* Current Generation Indicator */}
-          <div className="px-6 text-center">
-            <div className="text-white/50 text-xs uppercase tracking-widest">Generation</div>
-            <div className="text-white text-2xl font-bold">{currentGen}</div>
-          </div>
           
           {/* Next Generation */}
           <button 
@@ -78,7 +75,7 @@ export function PresentationControls({
     );
   }
 
-  // Default non-fullscreen controls (kept for backwards compatibility)
+  // Default non-fullscreen controls
   return (
     <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-white/90 backdrop-blur p-2 rounded-full shadow-lg border border-indigo-100">
       <button 
@@ -105,8 +102,8 @@ export function PresentationControls({
         )}
       </button>
       
-      <span className="text-xs font-bold uppercase text-stone-400 px-2 tracking-widest min-w-[100px] text-center">
-        Gen {currentGen}
+      <span className="text-xs font-medium text-stone-600 px-3 min-w-[120px] text-center">
+        {genName}
       </span>
       
       <button 
