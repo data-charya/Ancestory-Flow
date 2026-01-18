@@ -1,7 +1,7 @@
 {
   "name": "ancestry-flow",
   "version": "1.0.0",
-  "description": "Family Tree Application with Aiven PostgreSQL",
+  "description": "Family Tree",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cd backend && npm start",
@@ -13,7 +13,7 @@
   "devDependencies": {
     "concurrently": "^8.2.2"
   },
-  "keywords": ["family-tree", "react", "postgresql", "aiven"],
+  "keywords": ["family-tree", "react"],
   "author": "",
   "license": "MIT"
 }

@@ -110,7 +110,7 @@ export default function App() {
 
   // Loading state
   if (loading) {
-    return <LoadingState message="Connecting to Aiven..." />;
+    return <LoadingState message="Fetching family members..." />;
   }
 
   // Fullscreen Presentation Mode
