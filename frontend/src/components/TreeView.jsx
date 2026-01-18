@@ -49,78 +49,43 @@ export function TreeView({
   }, [presentationMode, presentation]);
 
 
-  // Fullscreen presentation mode
+  // Fullscreen presentation mode - shows ONE generation at a time
   if (isFullscreen) {
-    const { scale, translateY } = presentation.transform;
+    const currentGenMembers = grouped[presentation.currentGen] || [];
     
     return (
       <div 
         ref={containerRef}
-        className="w-full h-full flex flex-col overflow-hidden"
+        className="w-full h-full flex flex-col overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900"
       >
         {/* Title */}
-        <div className="text-center py-4 flex-shrink-0 z-10">
-          <h1 className="text-3xl font-serif font-bold text-white/90">Family Tree</h1>
-          <p className="text-indigo-300 text-lg mt-1 font-medium">
+        <div className="text-center py-6 flex-shrink-0">
+          <h1 className="text-4xl font-serif font-bold text-white/90 mb-2">Family Tree</h1>
+          <p className="text-indigo-300 text-xl font-medium">
             {getGenerationName(presentation.currentGen)}
+          </p>
+          <p className="text-white/40 text-sm mt-1">
+            {presentation.activeIndex + 1} of {presentation.totalGens} generations
           </p>
         </div>
 
-        {/* Tree Content - No scroll, transform to fit */}
-        <div className="flex-1 overflow-hidden relative">
+        {/* Current Generation - Centered */}
+        <div 
+          ref={contentRef}
+          className="flex-1 flex items-center justify-center px-8"
+        >
           <div 
-            ref={contentRef} 
-            className="absolute inset-0 flex flex-col items-center justify-start transition-transform duration-700 ease-out"
-            style={{ 
-              transform: `translateY(${translateY}px) scale(${scale})`,
-              transformOrigin: 'top center'
-            }}
+            key={presentation.currentGen}
+            className="flex justify-center gap-6 flex-wrap animate-fade-in"
           >
-            {/* Connection Lines - subtle */}
-            <svg 
-              className="absolute inset-0 pointer-events-none" 
-              style={{ width: '100%', height: '100%', overflow: 'visible' }}
-            >
-              {lines.map(line => (
-                <path 
-                  key={line.id} 
-                  d={line.path} 
-                  stroke="#a1a1aa"
-                  strokeWidth={1}
-                  strokeLinecap="round"
-                  fill="none"
-                  opacity={0.3}
-                />
-              ))}
-            </svg>
-
-            {/* Generation Rows - extra gap for lines */}
-            <div className="flex flex-col gap-16 items-center py-8">
-              {sortedGens.map(gen => (
-                <div 
-                  key={gen} 
-                  className="transition-all duration-500"
-                  style={{ 
-                    opacity: gen !== presentation.currentGen ? 0.1 : 1,
-                    transform: gen !== presentation.currentGen ? 'scale(0.85)' : 'scale(1)',
-                  }}
-                >
-                  <div 
-                    id={`gen-row-${gen}`} 
-                    className="flex justify-center gap-4"
-                  >
-                    {grouped[gen].map(member => (
-                      <PresentationMemberCard key={member.id} member={member} />
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+            {currentGenMembers.map(member => (
+              <PresentationMemberCard key={member.id} member={member} />
+            ))}
           </div>
         </div>
 
         {/* Controls */}
-        <div className="pb-6 flex-shrink-0 z-10">
+        <div className="pb-8 flex-shrink-0">
           <PresentationControls
             currentGen={presentation.currentGen}
             isPaused={presentation.isPaused}
