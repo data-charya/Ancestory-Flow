@@ -56,15 +56,37 @@ export function TreeView({
     return (
       <div 
         ref={containerRef}
-        className="w-full h-full flex flex-col overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900"
+        className="w-full h-full flex flex-col overflow-hidden presentation-bg"
       >
+        {/* Floating dust particles */}
+        <div className="dust-particle dust-1"></div>
+        <div className="dust-particle dust-2"></div>
+        <div className="dust-particle dust-3"></div>
+        <div className="dust-particle dust-4"></div>
+        <div className="dust-particle dust-5"></div>
+        <div className="dust-particle dust-6"></div>
+        <div className="dust-particle dust-7"></div>
+        <div className="dust-particle dust-8"></div>
+        <div className="dust-particle dust-9"></div>
+        <div className="dust-particle dust-10"></div>
+        <div className="dust-particle dust-11"></div>
+        <div className="dust-particle dust-12"></div>
+        
+        {/* Shimmer particles */}
+        <div className="shimmer-particle shimmer-1"></div>
+        <div className="shimmer-particle shimmer-2"></div>
+        <div className="shimmer-particle shimmer-3"></div>
+        <div className="shimmer-particle shimmer-4"></div>
+        <div className="shimmer-particle shimmer-5"></div>
+        <div className="shimmer-particle shimmer-6"></div>
+
         {/* Title */}
-        <div className="text-center py-6 flex-shrink-0">
-          <h1 className="text-4xl font-serif font-bold text-white/90 mb-2">Family Tree</h1>
-          <p className="text-indigo-300 text-xl font-medium">
+        <div className="text-center py-8 flex-shrink-0 z-10">
+          <h1 className="text-4xl font-serif font-bold text-stone-200 mb-3 drop-shadow-lg">Family Tree</h1>
+          <p className="text-amber-200/80 text-2xl font-medium">
             {getGenerationName(presentation.currentGen)}
           </p>
-          <p className="text-white/40 text-sm mt-1">
+          <p className="text-stone-400 text-sm mt-2">
             {presentation.activeIndex + 1} of {presentation.totalGens} generations
           </p>
         </div>
@@ -72,11 +94,11 @@ export function TreeView({
         {/* Current Generation - Centered */}
         <div 
           ref={contentRef}
-          className="flex-1 flex items-center justify-center px-8"
+          className="flex-1 flex items-center justify-center px-8 z-10"
         >
           <div 
             key={presentation.currentGen}
-            className="flex justify-center gap-6 flex-wrap animate-fade-in"
+            className="flex justify-center gap-8 flex-wrap animate-fade-in"
           >
             {currentGenMembers.map(member => (
               <PresentationMemberCard key={member.id} member={member} />
@@ -85,7 +107,7 @@ export function TreeView({
         </div>
 
         {/* Controls */}
-        <div className="pb-8 flex-shrink-0">
+        <div className="pb-8 flex-shrink-0 z-10">
           <PresentationControls
             currentGen={presentation.currentGen}
             isPaused={presentation.isPaused}
@@ -173,32 +195,32 @@ export function TreeView({
   );
 }
 
-// Get pastel relation color for presentation mode
+// Warm pastel colors for presentation mode
 const getRelationColor = (relation) => {
   const r = (relation || '').toLowerCase();
-  if (r.includes('self') || r === 'you') return 'ring-emerald-300/60 border-emerald-300';
-  if (r.includes('wife') || r.includes('husband') || r.includes('spouse')) return 'ring-pink-300/60 border-pink-300';
-  if (r.includes('father') || r.includes('mother') || r.includes('parent')) return 'ring-sky-300/60 border-sky-300';
-  if (r.includes('brother') || r.includes('sister') || r.includes('sibling')) return 'ring-violet-300/60 border-violet-300';
-  if (r.includes('son') || r.includes('daughter') || r.includes('child')) return 'ring-amber-300/60 border-amber-300';
-  if (r.includes('grand')) return 'ring-indigo-300/60 border-indigo-300';
-  if (r.includes('uncle') || r.includes('aunt')) return 'ring-teal-300/60 border-teal-300';
-  if (r.includes('cousin')) return 'ring-cyan-300/60 border-cyan-300';
-  if (r.includes('niece') || r.includes('nephew')) return 'ring-orange-300/60 border-orange-300';
-  if (r.includes('in-law')) return 'ring-rose-300/60 border-rose-300';
-  return 'ring-white/20 border-white/30';
+  if (r.includes('self') || r === 'you') return 'ring-amber-200/50 border-amber-300';
+  if (r.includes('wife') || r.includes('husband') || r.includes('spouse')) return 'ring-rose-200/50 border-rose-300';
+  if (r.includes('father') || r.includes('mother') || r.includes('parent')) return 'ring-orange-200/50 border-orange-300';
+  if (r.includes('brother') || r.includes('sister') || r.includes('sibling')) return 'ring-yellow-200/50 border-yellow-300';
+  if (r.includes('son') || r.includes('daughter') || r.includes('child')) return 'ring-lime-200/50 border-lime-300';
+  if (r.includes('grand')) return 'ring-stone-200/50 border-stone-300';
+  if (r.includes('uncle') || r.includes('aunt')) return 'ring-amber-100/50 border-amber-200';
+  if (r.includes('cousin')) return 'ring-orange-100/50 border-orange-200';
+  if (r.includes('niece') || r.includes('nephew')) return 'ring-yellow-100/50 border-yellow-200';
+  if (r.includes('in-law')) return 'ring-rose-100/50 border-rose-200';
+  return 'ring-stone-300/30 border-stone-400';
 };
 
-// Presentation mode member card with color coding
+// Presentation mode member card with warm styling
 function PresentationMemberCard({ member }) {
   const { id, name, relation } = member;
   const imageUrl = member.imageUrl || member.image_url;
   const colorClass = getRelationColor(relation);
   
   return (
-    <div id={`node-${id}`} className="flex flex-col items-center w-36 md:w-44">
-      {/* Avatar with colored ring */}
-      <div className={`w-20 h-20 md:w-24 md:h-24 rounded-full border-4 ${colorClass} shadow-xl overflow-hidden bg-stone-700 mb-2 flex-shrink-0 ring-4 ring-offset-2 ring-offset-transparent`}>
+    <div id={`node-${id}`} className="flex flex-col items-center w-40 md:w-48">
+      {/* Avatar with soft glow */}
+      <div className={`w-24 h-24 md:w-28 md:h-28 rounded-full border-3 ${colorClass} shadow-2xl overflow-hidden bg-stone-800 mb-3 flex-shrink-0 ring-4 ring-offset-4 ring-offset-stone-900/50`}>
         {imageUrl ? (
           <img 
             src={imageUrl} 
@@ -219,8 +241,8 @@ function PresentationMemberCard({ member }) {
       
       {/* Info */}
       <div className="text-center px-2">
-        <div className="font-semibold text-base text-white truncate max-w-full">{name}</div>
-        <div className="text-xs text-indigo-300/80 uppercase tracking-wider">{relation}</div>
+        <div className="font-semibold text-lg text-stone-100 truncate max-w-full drop-shadow">{name}</div>
+        <div className="text-xs text-amber-200/70 uppercase tracking-wider font-medium">{relation}</div>
       </div>
     </div>
   );
