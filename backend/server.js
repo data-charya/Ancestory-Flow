@@ -9,7 +9,8 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));  // Increased limit for base64 images
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // PostgreSQL Connection Pool (Aiven)
 const pool = new Pool({

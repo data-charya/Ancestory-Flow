@@ -178,23 +178,30 @@ export function TreeView({
 
 // Special member card for presentation mode
 function PresentationMemberCard({ member }) {
-  const { name, relation, imageUrl } = member;
+  const { name, relation } = member;
+  // Handle both camelCase and snake_case from API
+  const imageUrl = member.imageUrl || member.image_url;
   
   return (
     <div className="flex flex-col items-center w-40 md:w-56">
       {/* Avatar */}
-      <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white/20 shadow-2xl overflow-hidden bg-stone-700 mb-3">
+      <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white/20 shadow-2xl overflow-hidden bg-stone-700 mb-3 flex-shrink-0">
         {imageUrl ? (
           <img 
             src={imageUrl} 
             className="w-full h-full object-cover" 
-            alt={name} 
+            alt={name}
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'flex';
+            }}
           />
-        ) : (
-          <div className="h-full flex items-center justify-center text-white/60 font-bold text-3xl">
-            {name[0]}
-          </div>
-        )}
+        ) : null}
+        <div 
+          className={`h-full w-full items-center justify-center text-white/60 font-bold text-3xl bg-gradient-to-br from-stone-600 to-stone-700 ${imageUrl ? 'hidden' : 'flex'}`}
+        >
+          {name?.[0] || '?'}
+        </div>
       </div>
       
       {/* Info */}
