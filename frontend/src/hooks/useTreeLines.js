@@ -1,5 +1,5 @@
-// Custom hook for calculating elegant SVG connection lines between family members
-// Uses smooth organic curves optimized for visual clarity
+// Custom hook for neat tree lines
+// All horizontal lines stay in the gaps between generations
 
 import { useState, useLayoutEffect, useCallback, useEffect } from 'react';
 
@@ -16,136 +16,134 @@ export function useTreeLines(members, contentRef) {
     const content = contentRef.current;
     const contentRect = content.getBoundingClientRect();
 
-    // Helper to get element position relative to content
+    // Get element position
     const getNodePosition = (id) => {
       const el = document.getElementById(`node-${id}`);
       if (!el) return null;
-      
       const rect = el.getBoundingClientRect();
       return {
         x: rect.left - contentRect.left + rect.width / 2,
         top: rect.top - contentRect.top,
         bottom: rect.top - contentRect.top + rect.height,
-        left: rect.left - contentRect.left,
-        right: rect.left - contentRect.left + rect.width,
-        width: rect.width
       };
     };
 
-    // Parse parents helper
+    // Parse parents
     const getParentIds = (member) => {
       let parentIds = member.parents;
       if (typeof parentIds === 'string') {
-        try {
-          parentIds = JSON.parse(parentIds);
-        } catch {
-          return [];
-        }
+        try { parentIds = JSON.parse(parentIds); } 
+        catch { return []; }
       }
       if (!Array.isArray(parentIds)) return [];
       return parentIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id);
     };
 
-    // Group children by their parent pair
-    const familyGroups = {};
-    members.forEach(member => {
-      const parentIds = getParentIds(member);
-      if (parentIds.length > 0) {
-        const key = [...parentIds].sort((a, b) => a - b).join('-');
-        if (!familyGroups[key]) {
-          familyGroups[key] = { parents: parentIds, children: [] };
-        }
-        familyGroups[key].children.push(member);
+    // Get generation bottom positions (lowest point of cards in each gen)
+    const genBottoms = {};
+    const genTops = {};
+    members.forEach(m => {
+      const pos = getNodePosition(m.id);
+      if (!pos) return;
+      const gen = m.generation ?? 0;
+      if (!genBottoms[gen] || pos.bottom > genBottoms[gen]) {
+        genBottoms[gen] = pos.bottom;
+      }
+      if (!genTops[gen] || pos.top < genTops[gen]) {
+        genTops[gen] = pos.top;
       }
     });
 
-    // Track used vertical lines to avoid overlap
-    const usedDropX = [];
+    // Group children by primary parent
+    const parentToChildren = {};
+    members.forEach(member => {
+      const parentIds = getParentIds(member);
+      if (parentIds.length > 0) {
+        const primaryParent = parentIds[0];
+        if (!parentToChildren[primaryParent]) {
+          parentToChildren[primaryParent] = [];
+        }
+        parentToChildren[primaryParent].push(member);
+      }
+    });
 
-    // Draw lines for each family group
-    Object.entries(familyGroups).forEach(([key, family], groupIndex) => {
-      const parentPositions = family.parents
-        .map(pid => ({ id: pid, pos: getNodePosition(pid) }))
-        .filter(p => p.pos !== null);
+    // Draw lines for each parent group
+    Object.entries(parentToChildren).forEach(([parentId, children]) => {
+      const parent = members.find(m => m.id === parseInt(parentId));
+      if (!parent) return;
       
-      const childPositions = family.children
-        .map(child => ({ id: child.id, pos: getNodePosition(child.id) }))
+      const parentPos = getNodePosition(parseInt(parentId));
+      if (!parentPos) return;
+
+      const childPositions = children
+        .map(child => ({ id: child.id, pos: getNodePosition(child.id), gen: child.generation }))
         .filter(c => c.pos !== null)
-        .sort((a, b) => a.pos.x - b.pos.x); // Sort left to right
+        .sort((a, b) => a.pos.x - b.pos.x);
 
-      if (parentPositions.length === 0 || childPositions.length === 0) return;
+      if (childPositions.length === 0) return;
 
-      // Calculate parent center point
-      let parentCenterX, parentBottomY;
+      // Find the gap between parent generation and child generation
+      const parentGen = parent.generation ?? 0;
+      const childGen = childPositions[0].gen ?? 0;
       
-      if (parentPositions.length >= 2) {
-        const p1 = parentPositions[0].pos;
-        const p2 = parentPositions[1].pos;
-        parentBottomY = Math.max(p1.bottom, p2.bottom);
-        parentCenterX = (p1.x + p2.x) / 2;
-        
-        // Elegant spouse arc
-        const leftX = Math.min(p1.x, p2.x);
-        const rightX = Math.max(p1.x, p2.x);
-        const arcHeight = 12;
-        
+      const parentBottom = genBottoms[parentGen] || parentPos.bottom;
+      const childTop = genTops[childGen] || childPositions[0].pos.top;
+      
+      // Position horizontal bar in the middle of the gap
+      const gapMiddle = parentBottom + (childTop - parentBottom) / 2;
+
+      // Vertical line from parent down to gap middle
+      newLines.push({
+        id: `v1-${parentId}`,
+        path: `M ${parentPos.x} ${parentPos.bottom + 2} L ${parentPos.x} ${gapMiddle}`,
+      });
+
+      if (childPositions.length === 1) {
+        // Single child - horizontal then vertical
+        const child = childPositions[0];
+        if (Math.abs(parentPos.x - child.pos.x) > 2) {
+          newLines.push({
+            id: `h-${parentId}`,
+            path: `M ${parentPos.x} ${gapMiddle} L ${child.pos.x} ${gapMiddle}`,
+          });
+        }
         newLines.push({
-          id: `spouse-${key}`,
-          path: `M ${leftX} ${parentBottomY + 2} 
-                 Q ${parentCenterX} ${parentBottomY + arcHeight}, 
-                   ${rightX} ${parentBottomY + 2}`,
-          type: 'spouse'
+          id: `v2-${parentId}-${child.id}`,
+          path: `M ${child.pos.x} ${gapMiddle} L ${child.pos.x} ${child.pos.top - 2}`,
         });
       } else {
-        parentCenterX = parentPositions[0].pos.x;
-        parentBottomY = parentPositions[0].pos.bottom;
-      }
+        // Multiple children
+        const leftX = childPositions[0].pos.x;
+        const rightX = childPositions[childPositions.length - 1].pos.x;
 
-      // Find offset for drop line to avoid overlap
-      let dropX = parentCenterX;
-      const minGap = 8;
-      while (usedDropX.some(x => Math.abs(x - dropX) < minGap)) {
-        dropX += minGap;
-      }
-      usedDropX.push(dropX);
+        // Connect parent to the bar
+        const barLeft = Math.min(leftX, parentPos.x);
+        const barRight = Math.max(rightX, parentPos.x);
 
-      // Calculate child positions
-      const childTopY = Math.min(...childPositions.map(c => c.pos.top));
-      const verticalGap = childTopY - parentBottomY;
-      const junctionY = parentBottomY + verticalGap * 0.55; // Golden ratio-ish
-
-      // Single elegant curve for each child
-      childPositions.forEach((child, childIndex) => {
-        const startY = parentPositions.length >= 2 ? parentBottomY + 12 : parentBottomY + 2;
-        const endY = child.pos.top;
-        const controlOffset = (endY - startY) * 0.4;
-        
-        // Create smooth S-curve from parent to child
-        const path = `M ${dropX} ${startY}
-                      C ${dropX} ${startY + controlOffset},
-                        ${child.pos.x} ${endY - controlOffset},
-                        ${child.pos.x} ${endY}`;
-        
+        // Horizontal bar spanning all children (and parent if outside)
         newLines.push({
-          id: `link-${key}-${child.id}`,
-          path,
-          type: 'parent-child'
+          id: `h-${parentId}`,
+          path: `M ${barLeft} ${gapMiddle} L ${barRight} ${gapMiddle}`,
         });
-      });
+
+        // Vertical drop to each child
+        childPositions.forEach(child => {
+          newLines.push({
+            id: `v2-${parentId}-${child.id}`,
+            path: `M ${child.pos.x} ${gapMiddle} L ${child.pos.x} ${child.pos.top - 2}`,
+          });
+        });
+      }
     });
     
     setLines(newLines);
   }, [members, contentRef]);
 
-  // Draw on mount and when members change
   useLayoutEffect(() => {
-    const timers = [0, 100, 300, 600].map(delay => 
-      setTimeout(drawLines, delay)
-    );
+    const timers = [50, 200, 500].map(delay => setTimeout(drawLines, delay));
     return () => timers.forEach(clearTimeout);
   }, [drawLines, members.length, members]);
 
-  // Redraw on window resize
   useEffect(() => {
     const handleResize = () => requestAnimationFrame(drawLines);
     window.addEventListener('resize', handleResize);
