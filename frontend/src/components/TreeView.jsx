@@ -76,7 +76,7 @@ export function TreeView({
               transformOrigin: 'top center'
             }}
           >
-            {/* Connection Lines */}
+            {/* Connection Lines - subtle */}
             <svg 
               className="absolute inset-0 pointer-events-none" 
               style={{ width: '100%', height: '100%', overflow: 'visible' }}
@@ -85,12 +85,11 @@ export function TreeView({
                 <path 
                   key={line.id} 
                   d={line.path} 
-                  stroke="#a78bfa"
-                  strokeWidth={2}
+                  stroke="#a1a1aa"
+                  strokeWidth={1}
                   strokeLinecap="round"
-                  strokeLinejoin="round"
                   fill="none"
-                  opacity={0.4}
+                  opacity={0.3}
                 />
               ))}
             </svg>
@@ -146,21 +145,20 @@ export function TreeView({
         ref={contentRef} 
         className="relative min-w-full p-12 min-h-max pb-24"
       >
-        {/* Connection Lines */}
+        {/* Connection Lines - subtle and minimal */}
         <svg 
-          className="absolute inset-0 pointer-events-none z-0" 
+          className="absolute inset-0 pointer-events-none" 
           style={{ width: '100%', height: '100%', overflow: 'visible' }}
         >
           {lines.map(line => (
             <path 
               key={line.id} 
               d={line.path} 
-              stroke="#c4b5fd"
-              strokeWidth={2}
+              stroke="#d4d4d8"
+              strokeWidth={1}
               strokeLinecap="round"
-              strokeLinejoin="round"
               fill="none"
-              opacity={0.6}
+              opacity={0.5}
             />
           ))}
         </svg>
